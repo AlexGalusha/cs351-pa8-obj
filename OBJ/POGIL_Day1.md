@@ -116,7 +116,7 @@ define p2 = .<new Point>init(5, 6)  % Method chaining!
 
 9. Why do `init` and `moveTo` return `this`? What does this enable?
 
-10. Try: `.<.<new Point>init(1,2)>moveTo(3,4)>getX()`. What programming pattern does this demonstrate?
+10. Try: `.<.<.<new Point>init(1,2)>moveTo(3,4)>getX()`. What programming pattern does this demonstrate?
 
 ### Model 2B: Understanding `<expr>member` Syntax
 
@@ -131,12 +131,12 @@ define Calculator = class
     }
 
     method add = proc(n) {
-        set result = add(result, n);
+        set result = +(result, n);
         this
     }
 
     method multiply = proc(n) {
-        set result = mul(result, n);
+        set result = *(result, n);
         this
     }
 
