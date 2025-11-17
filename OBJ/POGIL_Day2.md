@@ -586,4 +586,4 @@ You've now explored:
 
 ---
 
-_Great work! You're now ready to tackle the PA8 homework problems._
+_Course content developed by Declan Gray-Mullen for WNEU with Claude_

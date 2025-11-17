@@ -482,4 +482,4 @@ Tomorrow we'll explore:
 
 ---
 
-_Note: Save your work! Tomorrow's activity builds on these concepts._
+_Course content developed by Declan Gray-Mullen for WNEU with Claude_
