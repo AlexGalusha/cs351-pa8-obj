@@ -11,6 +11,37 @@ Group Member 2:
 Group Member 3:
 Group Member 4:
 
+---
+
+### Running Code Examples
+
+**Note:** To run the code examples in this activity, you have two options:
+
+1. **Direct REPL input**: Type or paste the code directly into the REPL after running `rep`
+
+2. **File + Interactive mode** (Recommended for longer examples):
+   - Copy the code block to a file (e.g., `example.obj`)
+   - Run: `(cat example.obj; cat) | rep`
+   - This executes the file first, then keeps the REPL open for follow-up experiments
+   - You can reference variables and objects defined in the file
+
+Example workflow:
+```bash
+# Save Program A to a file
+echo "define MyClass = class
+    field x
+end" > programA.obj
+
+# Run it with interactive follow-up
+(cat programA.obj; cat) | rep
+# Now you can type: define obj = new MyClass
+# And continue experimenting with MyClass
+```
+
+This technique is especially useful when you want to test variations without retyping the base code.
+
+---
+
 ## Part 1: Classes Are Values (20 minutes)
 
 _Based on Lessons 1-3_
