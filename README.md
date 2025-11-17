@@ -77,10 +77,9 @@ files.
 
 **To Submit:**
 
-1. Complete all questions, including written answers in ASSIGNMENT.md
-2. Test your TYPE1 program to ensure it works correctly
-3. From inside your container: `tar -czf /workspace/pa8-YOURNAME.zip /workspace`
-4. Download and submit the zip file to Kodiak
+1. Test your OBJ programs to ensure they work correctly
+2. From inside your container: `tar -czf /workspace/pa8-YOURNAME.zip /workspace`
+3. Download and submit the zip file to Kodiak
 
 **Grading Criteria:**
 
