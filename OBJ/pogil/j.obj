@@ -1,0 +1,33 @@
+% Program J
+define Base = class
+    static x = 100
+    field x  % Same name!
+
+    method init = proc() {
+        set x = 200;
+        this
+    }
+
+    method getStaticX = proc() <myclass>x
+    method getInstanceX = proc() x
+end
+
+define Derived = class extends Base
+    static x = 300  % Shadow static
+    field x  % Shadow instance
+
+    method init = proc() {
+        .<super>init();
+        set x = 400;
+        this
+    }
+end
+
+define obj = .<new Derived>init()
+.<obj>getStaticX()    % What will this return?
+.<obj>getInstanceX()  % What will this return?
+
+% Direct access tests:
+<Base>x        % What value?
+<Derived>x     % What value?
+<obj>x         % What value?

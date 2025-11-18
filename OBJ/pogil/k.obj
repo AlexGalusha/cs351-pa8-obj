@@ -1,0 +1,56 @@
+% Program K
+define Shape = class
+    field color
+
+    method init = proc(c) {
+        set color = c;
+        this
+    }
+
+    method describeWithSelf = proc() {
+        % Using self for dynamic dispatch
+        .<self>getType()
+    }
+
+    method describeWithThis = proc() {
+        % Using this for static dispatch
+        .<this>getType()
+    }
+
+    method getType = proc() 1  % Returns 1 for shape
+end
+
+define Circle = class extends Shape
+    field radius
+
+    method init = proc(c, r) {
+        .<super>init(c);
+        set radius = r;
+        this
+    }
+
+    method getType = proc() 2  % Returns 2 for circle
+end
+
+define Square = class extends Shape
+    field side
+
+    method init = proc(c, s) {
+        .<super>init(c);
+        set side = s;
+        this
+    }
+
+    method getType = proc() 3  % Returns 3 for square
+end
+
+define c = .<new Circle>init("red", 5)
+define s = .<new Square>init("blue", 10)
+
+% Test with self (dynamic dispatch):
+.<c>describeWithSelf()  % Returns 2 (Circle's getType)
+.<s>describeWithSelf()  % Returns 3 (Square's getType)
+
+% Test with this (static dispatch):
+.<c>describeWithThis()  % Returns 1 (Shape's getType)
+.<s>describeWithThis()  % Returns 1 (Shape's getType)

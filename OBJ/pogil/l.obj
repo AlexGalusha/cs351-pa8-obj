@@ -1,0 +1,27 @@
+% Program L
+define Logger = class
+    method log = proc(msg) {
+        .<self>getPrefix()  % Call subclass's getPrefix, return the code
+    }
+
+    method getPrefix = proc() 1  % 1 = LOG
+end
+
+define TimestampLogger = class extends Logger
+    method getPrefix = proc() 2  % 2 = TIMESTAMP
+end
+
+define ErrorLogger = class extends Logger
+    method getPrefix = proc() 3  % 3 = ERROR
+
+    method logError = proc(msg) {
+        .<super>log(msg)  % Call parent's log
+    }
+end
+
+define tLogger = new TimestampLogger
+define eLogger = new ErrorLogger
+
+.<tLogger>log("test")      % Returns 2 (TIMESTAMP prefix)
+.<eLogger>log("test")      % Returns 3 (ERROR prefix)
+.<eLogger>logError("test") % Returns 3 (self still refers to ErrorLogger)

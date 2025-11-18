@@ -11,11 +11,30 @@ Group Member 2:
 Group Member 3:
 Group Member 4:
 
+---
+
+### Running Code Examples
+
+Use the same workflow from Day 1:
+
+```bash
+# Option 1: Direct REPL
+rep
+# Then type/paste code
+
+# Option 2: File + Interactive (Recommended)
+(cat pogil/i.obj; cat) | rep
+```
+
+---
+
 ## Part 5: Combined Inheritance Patterns (20 minutes)
 
 _Based on Lessons 9-11_
 
 ### Model 5A: Static and Object Inheritance Together
+
+Run `pogil/i.obj`:
 
 ```obj
 % Program I
@@ -35,7 +54,7 @@ define Company = class
 
     method getId = proc() employeeId
     method getSalary = proc() salary
-    method getCompanyName = proc() <myclass>companyName
+    method getCompanyName = proc() <self>companyName
 end
 
 define Manager = class extends Company
@@ -58,23 +77,26 @@ define emp2 = .<new Company>init(55000)
 .<emp1>getId()           % 1
 .<mgr1>getId()           % 2
 .<emp2>getId()           % 3
+.<emp1>getCompanyName()  % "TechCorp"
 .<mgr1>getCompanyName()  % "TechCorp Management"
 .<mgr1>getTeamSize()     % 5
 
 % What's the total count?
-<Company>employeeCount
-<Manager>employeeCount  % Is this the same?
+<Company>employeeCount   % 3
+<Manager>employeeCount   % 3 (same!)
 ```
 
 **Critical Thinking Questions:**
 
 1. What is `<Company>employeeCount` after creating all three employees?
 
-2. What is `<Manager>employeeCount`? Why?
+2. What is `<Manager>employeeCount`? Why is it the same as Company's count?
 
-3. Which `companyName` does the manager's `getDetails` show? Why is `<myclass>` important here?
+3. Why does `.<mgr1>getCompanyName()` return `"TechCorp Management"` instead of `"TechCorp"`? What would happen if we used `<myclass>` instead of `<self>`?
 
 ### Model 5B: Advanced Shadowing
+
+Run `pogil/j.obj`:
 
 ```obj
 % Program J
@@ -103,26 +125,26 @@ define Derived = class extends Base
 end
 
 define obj = .<new Derived>init()
-.<obj>getStaticX()    % 300 (Derived's static)
-.<obj>getInstanceX()  % 400 (Derived's instance)
+.<obj>getStaticX()    % 100 (Base's static, because myclass = Base)
+.<obj>getInstanceX()  % 200 (Base's instance field)
 
 % Direct access tests:
-<Base>x        % What value?
-<Derived>x     % What value?
-<obj>x         % What value?
+<Base>x        % 100
+<Derived>x     % 300
+<obj>x         % 400 (Derived's instance field!)
 ```
 
 **Critical Thinking Questions:**
 
-4. When a `Derived` object calls `getStaticX` and `getInstanceX`, what values are returned?
+4. Why does `.<obj>getStaticX()` return 100 instead of 300?
 
-5. How does `<myclass>` know whether to use Base's or Derived's static `x`?
+5. Why does `.<obj>getInstanceX()` return 200 instead of 400?
 
-6. Can you access Base's instance `x` (value 200) from outside the object? How?
+6. When you access `<obj>x` directly, you get 400. What's the difference between direct access and method access?
 
 **Synthesis Question:**
 
-7. This shadowing behavior is unlike Java/C++. What advantage might allowing field shadowing provide? What danger?
+7. This shadowing behavior is unlike Java/C++. In Java, you can't shadow fields like this. What does this teach you about how OBJ handles field lookups in methods vs direct access?
 
 ---
 
@@ -131,6 +153,8 @@ define obj = .<new Derived>init()
 _Based on Lesson 12_
 
 ### Model 6A: Understanding `self` vs `this`
+
+Run `pogil/k.obj`:
 
 ```obj
 % Program K
@@ -197,16 +221,17 @@ define s = .<new Square>init("blue", 10)
 
 9. When Shape's `describeWithSelf` method calls `.<self>getType()`, which version of `getType` runs?
 
-10. Why might you want to use `<this>` instead of `<self>` sometimes?
+10. Why might you want to use `<this>` instead of `<self>` sometimes? (Hint: think about intentionally calling the base class version)
 
-### Model 6B: External vs Internal Dispatch
+### Model 6B: External vs Internal Dispatch (Template Method Pattern)
+
+Run `pogil/l.obj`:
 
 ```obj
 % Program L
 define Logger = class
     method log = proc(msg) {
-        .<self>getPrefix();  % Returns prefix code
-        msg  % Just return the message
+        .<self>getPrefix()  % Call subclass's getPrefix, return the code
     }
 
     method getPrefix = proc() 1  % 1 = LOG
@@ -227,22 +252,22 @@ end
 define tLogger = new TimestampLogger
 define eLogger = new ErrorLogger
 
-.<tLogger>log("test")      % getPrefix returns 2, then "test"
-.<eLogger>log("test")      % getPrefix returns 3, then "test"
-.<eLogger>logError("test") % Still returns 3 due to self!
+.<tLogger>log("test")      % Returns 2 (TIMESTAMP prefix)
+.<eLogger>log("test")      % Returns 3 (ERROR prefix)
+.<eLogger>logError("test") % Returns 3 (self still refers to ErrorLogger)
 ```
 
 **Critical Thinking Questions:**
 
 11. What prefix code is returned when `TimestampLogger` logs a message?
 
-12. When `ErrorLogger`'s `logError` calls `.<super>log(msg)`, which `getPrefix` gets called?
+12. When `ErrorLogger`'s `logError` calls `.<super>log(msg)`, which `getPrefix` gets called? How does `<self>` work even though we called through `<super>`?
 
 13. How would the behavior change if Logger's `log` used `.<this>getPrefix()` instead?
 
 **Synthesis Question:**
 
-14. This demonstrates the Template Method pattern. Can you think of a real-world example where you'd want this behavior?
+14. This demonstrates the Template Method pattern. Can you think of a real-world example where you'd want this behavior? (Hint: consider a game engine with customizable rendering)
 
 ---
 
@@ -252,87 +277,84 @@ _Based on Lessons 13-15_
 
 ### Model 7A: The Power of `<!@>` (Lexical Environment)
 
+Run `pogil/m.obj`:
+
 ```obj
-% Program M
-let
-    outerVar = 999
-in
-    define ClassWithClosure = class
-        field instanceVar
+% Program M - Lexical Environment Access
+define outerVar = 999
 
-        method init = proc(val) {
-            set instanceVar = val;
-            this
-        }
+define ClassWithClosure = class
+    field instanceVar
 
-        method accessLexical = proc()
-            <!@>outerVar  % Access let-binding variable
+    method init = proc(val) {
+        set instanceVar = val;
+        this
+    }
 
-        method accessInstance = proc()
-            instanceVar
-    end
+    method accessLexical = proc()
+        <!@>outerVar  % Access lexical environment variable
 
-    define obj = .<new ClassWithClosure>init(111)
-    .<obj>accessLexical()    % 999
-    .<obj>accessInstance()   % 111
+    method accessInstance = proc()
+        instanceVar
+end
 
-    % Can we change outerVar?
-    set outerVar = 777
-    .<obj>accessLexical()  % 777 now!
+define obj = .<new ClassWithClosure>init(111)
+.<obj>accessLexical()    % 999
+.<obj>accessInstance()   % 111
+
+% Can we change outerVar?
+set outerVar = 777
+.<obj>accessLexical()  % 777 now!
 ```
 
 **Critical Thinking Questions:**
 
-15. What value does `<!@>outerVar` access?
+15. What value does `<!@>outerVar` access? Where is this variable defined?
 
-16. After changing `outerVar` to 777, what does `accessLexical` print?
+16. After changing `outerVar` to 777, what does `accessLexical` return? What does this tell you about `<!@>`?
 
-17. Can you access `outerVar` from outside the let-binding?
+17. What's the difference between accessing `<!@>outerVar` vs just `outerVar` from inside a method?
 
 ### Model 7B: Current Environment with `@`
 
+Run `pogil/n.obj`:
+
 ```obj
-% Program N
+% Program N - Current Environment Access
 define ContextClass = class
     method getEnv = proc()
         @  % Just @ by itself - returns current environment
 end
 
-let
-    x = 100
-    obj = new ContextClass
-in
-    let
-        x = 200
-    in
-        .<obj>getEnv()  % Returns environment object
-    end
-end
+define obj = new ContextClass
+.<obj>getEnv()  % Returns environment object
 ```
 
 **Critical Thinking Questions:**
 
-18. What does `@` represent?
+18. What does `@` represent? What type of value does it return?
 
-19. How is `@` different from `<this>`?
+19. How is `@` different from `<this>`? (Hint: `this` is an object, `@` is an environment)
 
 ### Model 7C: Practical Symbol Usage
 
+Run `pogil/o.obj`:
+
 ```obj
-% Program O
+% Program O - Using myclass and superclass
 define ConfigurableClass = class
     static defaultSize = 10
     field size
     field data
 
     method init = proc() {
-        set size = <myclass>defaultSize;
+        set size = <self>defaultSize;  % Use self for runtime class
         set data = "initial";
         this
     }
 
-    method resetToDefault = proc() {
-        set size = <superclass>defaultSize;  % If in subclass
+    method resetToParentDefault = proc() {
+        set size = <superclass>defaultSize;
         this
     }
 
@@ -346,19 +368,26 @@ end
 define CustomConfig = class extends ConfigurableClass
     static defaultSize = 20
 
-    method getMyDefault = proc() <myclass>defaultSize
+    method init = proc() {
+        .<super>init();  % Call parent init
+        this
+    }
+
+    method getMyDefault = proc() <self>defaultSize
     method getParentDefault = proc() <superclass>defaultSize
 end
 
 define obj1 = .<new CustomConfig>init()
-<obj1>size  % What value?
+<obj1>size                 % 20 (CustomConfig's defaultSize)
+.<obj1>getMyDefault()      % 20
+.<obj1>getParentDefault()  % 10
 ```
 
 **Critical Thinking Questions:**
 
-20. What's the initial size of `obj1`? Which `defaultSize` was used?
+20. What's the initial size of `obj1`? Why does it use CustomConfig's `defaultSize` even though the `init` method is defined in ConfigurableClass?
 
-21. When would you use `<superclass>` instead of naming the parent class directly?
+21. When would you use `<superclass>` instead of naming the parent class directly? What advantage does this provide?
 
 **Synthesis Question:**
 
@@ -366,223 +395,126 @@ define obj1 = .<new CustomConfig>init()
 
 ---
 
-## Part 8: Advanced Features (15 minutes)
+## Integration Challenge: Understanding Binding (15 minutes)
 
-_Based on Lessons 16-18_
+### Challenge: Predict the Output
 
-### Model 8A: Working with Display and Output
+Work through this example as a group and predict the output before running it:
 
 ```obj
-% Program P
-define FormattedPrinter = class
-    method formatHeader = proc(title)
-        % Returns a header code
-        title
+define A = class
+    static s = 100
+    field f
 
-    method formatList = proc(items)
-        % Note: In real OBJ, you'd need proper list support
-        % This is pseudocode for demonstration
-        .<self>formatHeader("List Items")
-end
-
-define Report = class
-    field title
-    field content
-
-    method init = proc(t, c) {
-        set title = t;
-        set content = c;
+    method init = proc() {
+        set f = 200;
         this
     }
 
-    method getTitle = proc() title
-    method getContent = proc() content
-end
-```
-
-**Critical Thinking Questions:**
-
-23. How would you extend this to support different output formats?
-
-24. What pattern would you use to separate presentation from data?
-
----
-
-## Integration Challenge: Design Patterns (20 minutes)
-
-### Challenge: Implement the Strategy Pattern
-
-The Strategy pattern lets you change an algorithm at runtime. Complete this implementation:
-
-```obj
-% Strategy Pattern in OBJ
-define SortStrategy = class
-    method sort = proc(data) {
-        % Basic sort - returns 0 as identifier
-        0
-    }
+    method testMyclass = proc() <myclass>s
+    method testSelf = proc() <self>s
+    method testThis = proc() <this>f
 end
 
-define BubbleSort = class extends SortStrategy
-    method sort = proc(data) {
-        % Bubble sort - returns 1 as identifier
-        1
-    }
-end
+define B = class extends A
+    static s = 300
+    field f
 
-define QuickSort = class extends SortStrategy
-    method sort = proc(data) {
-        % Quick sort - returns 2 as identifier
-        2
-    }
-end
-
-define DataProcessor = class
-    field strategy
-    field data
-
-    method init = proc(d) {
-        set data = d;
-        set strategy = new SortStrategy;  % Default
+    method init = proc() {
+        .<super>init();
+        set f = 400;
         this
     }
 
-    method setStrategy = proc(s) {
-        % TODO: Set the strategy
-        % set strategy = ?
-        % this
-    }
-
-    method processData = proc() {
-        % TODO: Use the strategy to sort data
-        % .<strategy>sort(data)
-    }
+    method testSuper = proc() <super>f
 end
 
-% Test your implementation:
-define processor = .<new DataProcessor>init("mydata")
-.<processor>processData()  % Should use basic sort
+define obj = .<new B>init()
 
-.<processor>setStrategy(new BubbleSort)
-.<processor>processData()  % Should use bubble sort
-
-.<processor>setStrategy(new QuickSort)
-.<processor>processData()  % Should use quick sort
+% Predict these outputs BEFORE running:
+.<obj>testMyclass()  % ?
+.<obj>testSelf()     % ?
+.<obj>testThis()     % ?
+.<obj>testSuper()    % ?
+<obj>f               % ?
 ```
 
 **Group Tasks:**
 
-25. Complete the `setStrategy` and `processData` methods
+23. Predict each output and explain your reasoning
 
-26. How does this pattern take advantage of OBJ's features?
+24. Run the code and verify your predictions
 
-27. Create another strategy (like `MergeSort`) and test it
+25. For any that you got wrong, explain why the actual output differs from your prediction
 
----
-
-## Final Challenge: Putting It All Together (10 minutes)
-
-### Create a Mini Framework
-
-Design a simple event system using everything you've learned:
-
-```obj
-% Your task: Create an event handling system
-define Event = class
-    static totalEvents = 0
-    field type
-    field data
-
-    % TODO: Initialize events with type and data
-end
-
-define EventHandler = class
-    % TODO: Add a handle method that processes events
-end
-
-define ClickHandler = class extends EventHandler
-    % TODO: Override handle for click events
-end
-
-define KeyHandler = class extends EventHandler
-    % TODO: Override handle for key events
-end
-
-define EventDispatcher = class
-    field handlers  % Pretend this is a list
-
-    % TODO: Add methods to:
-    % - Register handlers
-    % - Dispatch events to all handlers
-    % - Use polymorphism effectively
-end
-
-% Test scenario:
-% 1. Create a dispatcher
-% 2. Register both types of handlers
-% 3. Create and dispatch different events
-% 4. Verify polymorphic behavior
-```
-
-**Design Questions:**
-
-28. How did you use `<self>` vs `<this>` in your implementation?
-
-29. Where did you use static members and why?
-
-30. How does inheritance help in this design?
+26. Draw an environment diagram showing the object structure and how each symbol resolves
 
 ---
 
-## Day 2 Reflection (5 minutes)
+## Final Reflection (10 minutes)
 
 **Individual Synthesis:**
 
-31. What's the most powerful feature of OBJ that you discovered?
+27. What's the most surprising thing you learned about OBJ's binding semantics?
 
-32. How do OBJ's scope symbols (`self`, `super`, `myclass`, etc.) compare to other languages you know?
+28. When would you use `<self>` vs `<myclass>` for accessing static members?
 
-33. What programming pattern or technique from OBJ would you like to see in other languages?
+29. What real-world programming problem does the `this` vs `self` distinction solve?
 
 **Group Discussion:**
 
-34. As a group, create one example where OBJ's unique features solve a problem that would be harder in Java/Python/C++.
+30. As a group, explain the difference between these three access patterns:
+    - Direct field access: `<obj>field`
+    - Method access to own field: `field` (inside a method)
+    - Method access with self: `<self>field`
 
-35. What questions do you still have about OBJ for the homework assignment?
+31. Create a simple example that demonstrates when shallow binding (`this`) would be preferred over deep binding (`self`)
 
 ---
 
 ## Key Takeaways
 
-You've now explored:
+You've now mastered:
 
-- The difference between `self` (deep/dynamic) and `this` (shallow/static)
-- How `super`, `myclass`, and `superclass` navigate inheritance
-- The power of `<!@>` for lexical scope closure
-- Polymorphism through dynamic dispatch
-- How OBJ treats classes and environments as first-class values
+- **Static members are shared** across all instances in an inheritance chain
+- **`<self>` provides dynamic binding** for polymorphism
+- **`<this>` provides shallow binding** to the current object part
+- **`<myclass>` binds statically** to the class where code is defined
+- **`<superclass>` accesses parent class** static members
+- **`<!@>` provides lexical closure** over the environment where a class was defined
+- **Field shadowing** creates multiple fields with the same name in different object parts
 
-**For the Homework:**
+**For the Homework (Q1-Q6):**
 
-- Q1-Q6 will ask you to use these symbols in specific scenarios
-- Remember: each symbol has a specific purpose
-- Draw diagrams of object structure when confused
-- Test your understanding with small examples first
+- Each question will require understanding which symbol to use in specific scenarios
+- Remember: `self` ≠ `this` ≠ `myclass`!
+- Draw environment diagrams when confused
+- Test small examples to verify your understanding
+
+---
+
+## Debugging Cheat Sheet
+
+| What you see | Why | Fix |
+|--------------|-----|-----|
+| Method returns wrong static value | Used `<myclass>` instead of `<self>` | Change to `<self>` for dynamic binding |
+| Can't access subclass method | Variable bound to parent object part from `init` | Ensure `init` in subclass returns `this` |
+| Field has wrong value | Method accesses shadowed parent field | Use `<self>field` or define method in correct class |
+| "no binding for X" | Accessing member through wrong object part | Check what `init` returns and which methods are defined where |
 
 ---
 
 ## Summary Cheat Sheet
 
-| Symbol       | Description           | Use Case                          |
-| ------------ | --------------------- | --------------------------------- |
-| `self`       | Base object (dynamic) | Polymorphic internal calls        |
-| `this`       | Current object part   | Access current class's members    |
-| `super`      | Parent object part    | Call overridden parent methods    |
-| `myclass`    | Current class         | Access static members dynamically |
-| `superclass` | Parent class          | Access parent's static members    |
-| `<!@>`       | Lexical environment   | Access closure variables          |
-| `@`          | Current environment   | Reflection/debugging              |
-| `<expr>`     | Computed environment  | Dynamic member access             |
+| Symbol       | Binding Type | Resolves To | Use Case |
+|--------------|--------------|-------------|----------|
+| `self`       | Dynamic (deep) | Runtime class of base object | Polymorphic calls, accessing overridden statics |
+| `this`       | Static (shallow) | Current object part | Access current class's members explicitly |
+| `super`      | Static (shallow) | Parent object part | Call overridden parent methods |
+| `myclass`    | Static | Class where code is written | Access static members (non-polymorphic) |
+| `superclass` | Static | Parent class | Access parent's static members |
+| `<!@>`       | Lexical | Environment where class defined | Access closure variables |
+| `@`          | Dynamic | Current environment | Reflection/debugging |
 
 ---
 

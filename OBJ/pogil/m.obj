@@ -1,0 +1,26 @@
+% Program M - Lexical Environment Access
+% First define the class in the global environment
+define outerVar = 999
+
+define ClassWithClosure = class
+    field instanceVar
+
+    method init = proc(val) {
+        set instanceVar = val;
+        this
+    }
+
+    method accessLexical = proc()
+        <!@>outerVar  % Access lexical environment variable
+
+    method accessInstance = proc()
+        instanceVar
+end
+
+define obj = .<new ClassWithClosure>init(111)
+.<obj>accessLexical()    % 999
+.<obj>accessInstance()   % 111
+
+% Can we change outerVar?
+set outerVar = 777
+.<obj>accessLexical()  % 777 now!

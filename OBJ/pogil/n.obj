@@ -1,0 +1,8 @@
+% Program N - Current Environment Access
+define ContextClass = class
+    method getEnv = proc()
+        @  % Just @ by itself - returns current environment
+end
+
+define obj = new ContextClass
+.<obj>getEnv()  % Returns environment object

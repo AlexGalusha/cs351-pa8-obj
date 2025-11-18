@@ -1,0 +1,47 @@
+% Program I
+define Company = class
+    static companyName = "TechCorp"
+    static employeeCount = 0
+
+    field employeeId
+    field salary
+
+    method init = proc(sal) {
+        set <Company>employeeCount = add1(<Company>employeeCount);
+        set employeeId = <Company>employeeCount;
+        set salary = sal;
+        this
+    }
+
+    method getId = proc() employeeId
+    method getSalary = proc() salary
+    method getCompanyName = proc() <self>companyName
+end
+
+define Manager = class extends Company
+    static companyName = "TechCorp Management"  % Override static
+    field teamSize
+
+    method init = proc(sal, team) {
+        .<super>init(sal);
+        set teamSize = team;
+        this
+    }
+
+    method getTeamSize = proc() teamSize
+end
+
+define emp1 = .<new Company>init(50000)
+define mgr1 = .<new Manager>init(80000, 5)
+define emp2 = .<new Company>init(55000)
+
+.<emp1>getId()           % 1
+.<mgr1>getId()           % 2
+.<emp2>getId()           % 3
+.<emp1>getCompanyName()  % "TechCorp"
+.<mgr1>getCompanyName()  % "TechCorp Management"
+.<mgr1>getTeamSize()     % 5
+
+% What's the total count?
+<Company>employeeCount
+<Manager>employeeCount  % Is this the same?

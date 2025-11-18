@@ -1,0 +1,40 @@
+% Program O - Using myclass and superclass
+define ConfigurableClass = class
+    static defaultSize = 10
+    field size
+    field data
+
+    method init = proc() {
+        set size = <self>defaultSize;  % Use self for runtime class
+        set data = "initial";
+        this
+    }
+
+    method resetToParentDefault = proc() {
+        set size = <superclass>defaultSize;
+        this
+    }
+
+    method cloneFrom = proc(other) {
+        set size = <other>size;
+        set data = <other>data;
+        this
+    }
+end
+
+define CustomConfig = class extends ConfigurableClass
+    static defaultSize = 20
+
+    method init = proc() {
+        .<super>init();  % Call parent init
+        this  % Return this CustomConfig object part
+    }
+
+    method getMyDefault = proc() <self>defaultSize
+    method getParentDefault = proc() <superclass>defaultSize
+end
+
+define obj1 = .<new CustomConfig>init()
+<obj1>size                 % Should be 20
+.<obj1>getMyDefault()      % 20
+.<obj1>getParentDefault()  % 10
